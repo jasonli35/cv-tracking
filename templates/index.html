@@ -2,17 +2,64 @@
 <html>
     <head>
         <script src="../public/rest.js"></script>
+        <style>
+            .dropbtn {
+              background-color: #3498DB;
+              color: white;
+              padding: 16px;
+              font-size: 16px;
+              border: none;
+              cursor: pointer;
+            }
+            
+            .dropbtn:hover, .dropbtn:focus {
+              background-color: #2980B9;
+            }
+            
+            .dropdown {
+              position: relative;
+              display: inline-block;
+            }
+            
+            .dropdown-content {
+              display: none;
+              position: absolute;
+              background-color: #f1f1f1;
+              min-width: 160px;
+              overflow: auto;
+              box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+              z-index: 1;
+            }
+            
+            .dropdown-content a {
+              color: black;
+              padding: 12px 16px;
+              text-decoration: none;
+              display: block;
+            }
+            
+            .dropdown a:hover {background-color: #ddd;}
+            
+            .show {display: block;}
+            </style>
     </head>
     <body>
         <div class="container">
             <h3> Live Streaming </h3>
-            <button id="toggle_button" style="background-color: green; font-size: 16px; margin: 4px 2px; text-align: center; padding: 15px 32px; ">Toggle</button>
-            <button id="motor_left_button" style="background-color: greenyellow; font-size: 16px; margin: 4px 2px; text-align: center; padding: 15px 32px; ">motor left</button>
-            <button id="motor_right_button" style="background-color: yellow; font-size: 16px; margin: 4px 2px; text-align: center; padding: 15px 32px; ">motor right</button>
-            <button id="buzzer_button" style="background-color: red; font-size: 16px; margin: 4px 2px; text-align: center; padding: 15px 32px; ">Buzzer Start</button>
-            <button id="stop_buzzer_button" style="background-color: green; font-size: 16px; margin: 4px 2px; text-align: center; padding: 15px 32px; ">Buzzer Stop</button>
-            <br>
-            <img id = "video" style = "visibility: hidden;" src="{{ url_for('video_feed') }}" width="50%">
+            <div class="dropdown">
+                <button onclick="myFunction()" class="dropbtn">Dropdown</button>
+                <div id="myDropdown" class="dropdown-content">
+                  <a href="">red object</a>
+                  <a href="">light-blue object</a>
+                  <a href="">circular object</a>
+                  <a href="">human face</a>
+                </div>
+             </div>
+             <button></button>
+
+              <br>
+            <img id = "video" style = "visibility: visible;" src="{{ url_for('video_feed') }}" width="50%">
+
          
            
         </div>
