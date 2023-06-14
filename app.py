@@ -22,10 +22,11 @@ import PIL
 import cv2
 
 
+
 from PIL import Image, ImageDraw, ImageFont
 
 
-
+print('PIL version:', PIL.__version__) 
 
 isVideoOn = False
 buzzerPin = 11 # define buzzerPin
@@ -88,44 +89,62 @@ def gen_frames():
                 x, y, w, h = cv2.boundingRect(cnts[0])
                 cv2.rectangle(original, (x,y), (x + w, y + h),(0,255,0),2)
             
+
             #below code is for add label for the image (code added from addText.py)
             #_____________________________________________________
+            img = np.array(original)
+            org = (x,y)
+            cv2.putText(img, 'Red Object', org, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 250, 0), 1, cv2.LINE_AA)
+            original = img
 
-            image = Image.open(r'original.jpg') 
+           
+#             img = Image.fromarray(original) 
   
-            draw = ImageDraw.Draw(image) 
+#             draw = ImageDraw.Draw(img) 
 
-# draw white rectangle 100x40 with center in 200,150
-            draw.rectangle((200-50, 150-20, 200+50, 150+20), fill='white')
+# # draw white rectangle 100x40 with center in 200,150
+#             draw.rectangle((200-50, 150-20, 200+50, 150+20), fill='white')
 
 
-# find font size for text `"Hello World"` to fit in rectangle 200x100
-            selected_size = 1
-            for size in range(1, 150):
-                arial = ImageFont.FreeTypeFont('arial.ttf', size=size)
-            #     w, h = arial.getsize("Red Object")  # older versions
+# # find font size for text `"Hello World"` to fit in rectangle 200x100
+#             selected_size = 1
+#             for size in range(1, 150):
+#                 arial = ImageFont.FreeTypeFont('arial.ttf', size=size)
+#                 # w, h = arial.getsize("Red Object")  # older versions
+
+#                 left, top, right, bottom = arial.getbbox("Hello World")  # needs PIL 8.0.0
+#                 w = right - left
+#                 h = bottom - top
     
-            # if w > 100 or h > 40:
-            #     break
+#             if w > 100 or h > 40:
+#                 break
         
-            selected_size = size
+#             selected_size = size
     
       
-            arial = ImageFont.FreeTypeFont('arial.ttf', size=selected_size)
+#             arial = ImageFont.FreeTypeFont('arial.ttf', size=selected_size)
 
 
-            draw.text((200, 150), "Red Object", fill='black', anchor='mm', font=arial)
-            image.save('original.jpg')
+#             draw.text((200, 150), "Red Object", fill='black', anchor='mm', font=arial)
+#             # img.save('original.jpg')
+#             img.save('modified.jpg')
+
 
 
 
 #_________________________________________________________________________
             #display image on the screen
-            cv2.imread('original.jpg')
+            # cv2.imread('original.jpg')
             ret, buffer = cv2.imencode('.jpg', original)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            # img.save('modified.jpg')
+
+            # ret, buffer = cv2.imencode('.jpg', cv2.imread('modified.jpg'))
+            # frame = buffer.tobytes()
+            # yield (b'--frame\r\n'
+            #        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
             
             
             
