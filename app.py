@@ -88,7 +88,7 @@ def gen_frames():
                 x, y, w, h = cv2.boundingRect(cnts[0])
                 cv2.rectangle(original, (x,y), (x + w, y + h),(0,255,0),2)
             
-            #below code is for add label for the image
+            #below code is for add label for the image (code added from addText.py)
             #_____________________________________________________
 
             image = Image.open(r'original.jpg') 
