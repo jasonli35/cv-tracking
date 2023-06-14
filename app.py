@@ -18,6 +18,13 @@ import threading
 import time
 from fastapi.templating import Jinja2Templates
 
+import PIL
+import cv2
+
+
+from PIL import Image, ImageDraw, ImageFont
+
+
 
 
 isVideoOn = False
@@ -60,12 +67,10 @@ def gen_frames():
             original = image.copy()
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-            # red is on the upper and lower end of the HSV scale, requiring 2 ranges 
-            # red is on the upper and lower end of the HSV scale, requiring 2 ranges 
+
             lower1 = np.array([0, 150, 20])
             upper1 = np.array([10, 255, 255])
-            lower2 = np.array([160,100,20])
-            upper2 = np.array([179,255,255])
+
     
     # masks input image with upper and lower red ranges
             mask = cv2.inRange(hsv, lower1, upper1)
@@ -74,12 +79,49 @@ def gen_frames():
             result = cv2.bitwise_and(original,original,mask=mask)
 
 # Find blob contours on mask
-            cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-            for c in cnts:
-                cv2.drawContours(original,[c], -1, (36,255,12), 2)
+            cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cnts = sorted(cnts, key = cv2.contourArea, reverse=True)
+            #cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+            #for c in cnts:
+            #    cv2.drawContours(original,[c], -1, (36,255,12), 2)
+            if len(cnts) > 0:
+                x, y, w, h = cv2.boundingRect(cnts[0])
+                cv2.rectangle(original, (x,y), (x + w, y + h),(0,255,0),2)
+            
+            #below code is for add label for the image
+            #_____________________________________________________
 
-            ret, buffer = cv2.imencode('.jpg', result)
+            image = Image.open(r'original.jpg') 
+  
+            draw = ImageDraw.Draw(image) 
+
+# draw white rectangle 100x40 with center in 200,150
+            draw.rectangle((200-50, 150-20, 200+50, 150+20), fill='white')
+
+
+# find font size for text `"Hello World"` to fit in rectangle 200x100
+            selected_size = 1
+            for size in range(1, 150):
+                arial = ImageFont.FreeTypeFont('arial.ttf', size=size)
+                w, h = arial.getsize("Red Object")  # older versions
+    
+            if w > 100 or h > 40:
+                break
+        
+            selected_size = size
+    
+      
+            arial = ImageFont.FreeTypeFont('arial.ttf', size=selected_size)
+
+
+            draw.text((200, 150), "Red Object", fill='black', anchor='mm', font=arial)
+            image.save('original.jpg')
+
+
+
+#_________________________________________________________________________
+            #display image on the screen
+            ret, buffer = cv2.imencode('.jpg', original)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
