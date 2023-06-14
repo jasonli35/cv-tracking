@@ -103,10 +103,10 @@ def gen_frames():
             selected_size = 1
             for size in range(1, 150):
                 arial = ImageFont.FreeTypeFont('arial.ttf', size=size)
-                w, h = arial.getsize("Red Object")  # older versions
+            #     w, h = arial.getsize("Red Object")  # older versions
     
-            if w > 100 or h > 40:
-                break
+            # if w > 100 or h > 40:
+            #     break
         
             selected_size = size
     
@@ -121,6 +121,7 @@ def gen_frames():
 
 #_________________________________________________________________________
             #display image on the screen
+            cv2.imread('original.jpg')
             ret, buffer = cv2.imencode('.jpg', original)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
