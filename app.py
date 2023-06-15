@@ -35,8 +35,9 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/public", StaticFiles(directory="public"), name="public")
 print("Initializing Cam")
-camera = cv2.VideoCapture(1)
-
+camera = cv2.VideoCapture(0)
+camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)     
 
 GpioPins = [18, 23, 24, 25]
 
@@ -76,19 +77,22 @@ def gen_frames():
 
     while True:
         
+        print("line 79")
        
-        success, frame = camera.read()
+        success, original = camera.read()
 
         
         if not success:
             break
         else:
-            image = cv2.imread('original.jpg')
-            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-            cv2.imwrite("original.jpg", frame)
+            
+            # cv2.imwrite("original.jpg", frame)  
+            # image = cv2.imread('original.jpg') 
+
+            hsv = cv2.cvtColor(original, cv2.COLOR_BGR2HSV)
 
             
-            original = image.copy()
+            # original = image.copy()
             
 
 
@@ -119,10 +123,11 @@ def gen_frames():
 
             #below code is for add label for the image (code added from addText.py)
             #_____________________________________________________
-            img = np.array(original)
+            # img = np.array(original)
             org = (x,y)
-            cv2.putText(img, 'Red Object', org, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 250, 0), 1, cv2.LINE_AA)
-            original = img
+            cv2.putText(original, 'Red Object', org, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 250, 0), 1, cv2.LINE_AA)
+            # original = img
+            print("line 129")
 
            
 
@@ -138,12 +143,13 @@ def gen_frames():
             yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
+            print("line 144")
+
             opening=cv2.morphologyEx(mask, cv2.MORPH_OPEN, mask)
     # cv2.imshow('Masked image', opening)
 
     # run connected components algo to return all objects it sees. 
-            camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)     
+
             num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(opening, 4, cv2.CV_32S)
             b = np.matrix(labels)
             if num_labels > 1:
