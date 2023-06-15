@@ -35,9 +35,8 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/public", StaticFiles(directory="public"), name="public")
 print("Initializing Cam")
-camera = cv2.VideoCapture(0)
-camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+camera = cv2.VideoCapture(1)
+
 
 GpioPins = [18, 23, 24, 25]
 
@@ -47,14 +46,16 @@ mymotortest = RpiMotorLib.BYJMotor("MyMotorOne", "28BYJ")
 step_time = .002
 
 # PID Gain Values (these are just starter values)
-Kp = 0.003
-Kd = 0.0001
-Ki = 0.0001
+Kp = 0.3
+Kd = 0.1
+Ki = 0.1
 
 # error values
 d_error = 0
 last_error = 0
 sum_error = 0
+x = 0
+y = 0
 
 
 
@@ -69,6 +70,8 @@ def gen_frames():
     global sum_error
     global d_error
     global last_error
+    global x
+    global y
    
 
     while True:
@@ -76,8 +79,6 @@ def gen_frames():
        
         success, frame = camera.read()
 
-       
-        
         
         if not success:
             break
@@ -99,18 +100,18 @@ def gen_frames():
             mask = cv2.inRange(hsv, lower1, upper1)
 
 
-          
+
 
             result = cv2.bitwise_and(original,original,mask=mask)
 
 # Find blob contours on mask
-            x = 0
-            y = 0
+           
             cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             cnts = sorted(cnts, key = cv2.contourArea, reverse=True)
             #cnts = cnts[0] if len(cnts) == 2 else cnts[1]
             #for c in cnts:
             #    cv2.drawContours(original,[c], -1, (36,255,12), 2)
+            print("line 114")
             if len(cnts) > 0:
                 x, y, w, h = cv2.boundingRect(cnts[0])
                 cv2.rectangle(original, (x,y), (x + w, y + h),(0,255,0),2)
@@ -140,7 +141,9 @@ def gen_frames():
             opening=cv2.morphologyEx(mask, cv2.MORPH_OPEN, mask)
     # cv2.imshow('Masked image', opening)
 
-    # run connected components algo to return all objects it sees.      
+    # run connected components algo to return all objects it sees. 
+            camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)     
             num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(opening, 4, cv2.CV_32S)
             b = np.matrix(labels)
             if num_labels > 1:
@@ -181,9 +184,9 @@ def gen_frames():
                 else:
             #run 0 steps if within an error of 20
                     mymotortest.motor_run(GpioPins, step_time, 0, direction, False, "full", .05)
-                # print("object in view")
+                print("object in view")
             # else:
-                # print('no object in view')
+                print('no object in view')
         
 
             # k = cv2.waitKey(5)
