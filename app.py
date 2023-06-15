@@ -35,7 +35,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/public", StaticFiles(directory="public"), name="public")
 print("Initializing Cam")
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(-1)
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)     
 
@@ -44,12 +44,12 @@ GpioPins = [18, 23, 24, 25]
 # Declare a named instance of class pass a name and motor type
 mymotortest = RpiMotorLib.BYJMotor("MyMotorOne", "28BYJ")
 #min time between motor steps (ie max speed)
-step_time = .002
+step_time = .02 
 
 # PID Gain Values (these are just starter values)
-Kp = 0.3
-Kd = 0.1
-Ki = 0.1
+Kp = 0.003
+Kd = 0.001
+Ki = 0.001
 
 # error values
 d_error = 0
@@ -77,7 +77,7 @@ def gen_frames():
 
     while True:
         
-        print("line 79")
+        # print("line 79")
        
         success, original = camera.read()
 
@@ -115,7 +115,7 @@ def gen_frames():
             #cnts = cnts[0] if len(cnts) == 2 else cnts[1]
             #for c in cnts:
             #    cv2.drawContours(original,[c], -1, (36,255,12), 2)
-            print("line 114")
+            # print("line 114")
             if len(cnts) > 0:
                 x, y, w, h = cv2.boundingRect(cnts[0])
                 cv2.rectangle(original, (x,y), (x + w, y + h),(0,255,0),2)
@@ -124,10 +124,10 @@ def gen_frames():
             #below code is for add label for the image (code added from addText.py)
             #_____________________________________________________
             # img = np.array(original)
-            org = (x,y)
-            cv2.putText(original, 'Red Object', org, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 250, 0), 1, cv2.LINE_AA)
+                org = (x,y)
+                cv2.putText(original, 'Red Object', org, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 250, 0), 1, cv2.LINE_AA)
             # original = img
-            print("line 129")
+                # print("line 129")
 
            
 
@@ -138,31 +138,33 @@ def gen_frames():
 #_________________________________________________________________________
             #display image on the screen
             # cv2.imread('original.jpg')
-            ret, buffer = cv2.imencode('.jpg', original)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                
+                
+            
 
-            print("line 144")
+                # print("line 144")
 
-            opening=cv2.morphologyEx(mask, cv2.MORPH_OPEN, mask)
-    # cv2.imshow('Masked image', opening)
+    #             opening=cv2.morphologyEx(mask, cv2.MORPH_OPEN, mask)
+    # # # cv2.imshow('Masked image', opening)
 
-    # run connected components algo to return all objects it sees. 
+    # # # run connected components algo to return all objects it sees. 
 
-            num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(opening, 4, cv2.CV_32S)
-            b = np.matrix(labels)
-            if num_labels > 1:
-                start = time.time()
-        # extracts the label of the largest none background component
-        # and displays distance from center and image.
-                max_label, max_size = max([(i, stats[i, cv2.CC_STAT_AREA]) for i in range(1, num_labels)], key = lambda x: x[1])
-                Obj = b == max_label
-                Obj = np.uint8(Obj)
-                Obj[Obj > 0] = 255
+    #             num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(opening, 4, cv2.CV_32S)
+             
+    #             b = np.matrix(labels)
+                start = 0
+                if len(cnts) > 1:
+                    start = time.time()
+    # #     # extracts the label of the largest none background component
+    # #     # and displays distance from center and image.
+    #             max_label, max_size = max([(i, stats[i, cv2.CC_STAT_AREA]) for i in range(1, num_labels)], key = lambda x: x[1])
+    #             Obj = b == max_label
+    #             Obj = np.uint8(Obj)
+    #             Obj[Obj > 0] = 255
         
         # calculate error from center column of masked image
-                error = -1 * (320 - centroids[max_label][0])
+                # centroids = [x+w/2, y+h/2]
+                error = -1 * (320 - x+w/2)
 
                 speed = Kp * error + Ki * sum_error + Kd * d_error
         
@@ -187,17 +189,23 @@ def gen_frames():
         # buffer of 20 only runs within 20
                 if abs(error) > 20:
                     mymotortest.motor_run(GpioPins, speed_inv * step_time, 1, direction, False, "full", .05)
+                    print("motor moving")
                 else:
             #run 0 steps if within an error of 20
                     mymotortest.motor_run(GpioPins, step_time, 0, direction, False, "full", .05)
-                print("object in view")
-            # else:
+                    print("object in view")
+                    print("motor moving")
+            else:
                 print('no object in view')
         
 
             # k = cv2.waitKey(5)
             # if k==27:
             #     break
+        ret, buffer = cv2.imencode('.jpg', original)
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 
             
